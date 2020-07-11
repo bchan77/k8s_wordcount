@@ -2,6 +2,9 @@ import logging
 from kubernetes import client, config
 import getopt, sys
 
+def get_namespace():
+    #Get a list of namespace
+    print("get_namespace")
 
 
 def create_pvc_if_not_exist():
@@ -29,6 +32,11 @@ def main():
             if(arg.upper() not in ['DEBUG', "INFO", "WARNING", "ERROR","CRITICAL"]):
                 print("ERROR: --Log needs to be in DEBUG, INFO, WARNING, ERROR or CRITICAL ")
                 print_usage()
+
+    #Lets get the KUBECONFIG
+    config.load_kube_config()
+    kube_client = client.CoreV1Api()
+    
 
 
 if __name__ == "__main__":
