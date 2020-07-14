@@ -19,19 +19,23 @@ def get_all_pvc(kube_client, namespace):
 
     return pvc_list
 
-def create_pvc_if_not_exist():
+def create_pvc_if_not_exist(kube_client, namespace = "default", pvc_name="k8s_wordcount_pvc"):
+
+    pvc_list  = get_all_pvc(kube_client, namespace)
     print("create_pvc_if_not_exist")
 
 
 def print_usage():
     print(sys.argv[0] +  " -h " \
-                         "--LOG <DEBUG|INFO|WARNING|ERROR|CRITICAL>"
+                         "--LOG <DEBUG|INFO|WARNING|ERROR|CRITICAL>" \
+                         "--pvc <k8s_wordcount>"
           )
 
 
 def main():
     LOGGING=logging.INFO # By default, just log info
     NAMESPACE=""
+    PVC_NAME = "k8s_wordcount_pvc"
 
     try:
         opts, args = getopt.getopt(sys.argv[1:], "-h", ["log="])
@@ -55,6 +59,9 @@ def main():
                 logging.basicConfig(level=logging.CRITICAL)
             else:
                 print("ERROR: --log needs to be in DEBUG, INFO, WARNING, ERROR or CRITICAL ")
+        elif opt == "--pvc":
+            PVC_NAME = arg
+
         elif opt == "-h":
             print_usage()
 
@@ -65,6 +72,9 @@ def main():
 
     #Testing only
     pvcs = get_all_pvc(kube_client,NAMESPACE)
+
+    #Creating PVC
+    create_pvc_if_not_exist(kube_client,NAMESPACE,PVC_NAME)
 
     print(pvcs)
 
