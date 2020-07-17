@@ -1,15 +1,14 @@
+# Create a PVC to store files
 apiVersion: v1
-kind: PersistentVolume
+kind: PersistentVolumeClaim
 metadata:
-  name: nfs-master-pv
+  name: k8s-wordcount-pvc
 spec:
-  capacity:
-    storage: 10Gi
+  volumeMode: Filesystem
+  resources:
+    requests:
+      storage: 10Gi   # Lets ask for 10GB. Change it if we needs it to be smaller
   accessModes:
     - ReadWriteMany
-  persistentVolumeReclaimPolicy: Retain
-  storageClassName: slow
-  nfs:
-    path: /mnt/nfs
-    server: 10.215.241.171
-    readOnly: false
+  storageClassName: slow   #Update if the k8s has no default storage class.
+
