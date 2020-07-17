@@ -1,6 +1,7 @@
 import logging
 from kubernetes import client, config
-import getopt, sys
+from os import path
+import getopt, sys, yaml
 
 def get_namespace():
     #Get a list of namespace
@@ -19,23 +20,35 @@ def get_all_pvc(kube_client, namespace):
 
     return pvc_list
 
-def create_pvc_if_not_exist(kube_client, namespace = "default", pvc_name="k8s_wordcount_pvc"):
+def create_pvc_if_not_exist(kube_client, namespace = "default", pvc_name="k8s-wordcount-pvc"):
 
+    #Get a list of PVC and see the pvc is there
     pvc_list  = get_all_pvc(kube_client, namespace)
-    print("create_pvc_if_not_exist")
+    logging.debug("pvc_list=" + str(pvc_list))
+
+    #If the pvc doesn't exist, create it
+    if(pvc_name not in pvc_list):
+        # Source: https://stackoverflow.com/questions/56673919/kubernetes-python-api-client-execute-full-yaml-file
+        logging.info("Creating PVC - " + pvc_name)
+        with open(path.join(path.dirname(__file__),"../kubernetes/pvc.yaml")) as f:
+            dep = yaml.safe_load(f)
+            k8s_beta = client.ExtensionsV1beta1Api()
+            reps = k8s_beta.create_namespaced_deployment(body=dep, namespace=namespace)
+    else:
+        logging.info("No going to create any PVC")
+
 
 
 def print_usage():
     print(sys.argv[0] +  " -h " \
-                         "--LOG <DEBUG|INFO|WARNING|ERROR|CRITICAL>" \
-                         "--pvc <k8s_wordcount>"
+                         "--log <DEBUG|INFO|WARNING|ERROR|CRITICAL>"
           )
 
 
 def main():
     LOGGING=logging.INFO # By default, just log info
     NAMESPACE=""
-    PVC_NAME = "k8s_wordcount_pvc"
+    PVC_NAME = "k8s-wordcount-pvc"
 
     try:
         opts, args = getopt.getopt(sys.argv[1:], "-h", ["log="])
@@ -59,8 +72,6 @@ def main():
                 logging.basicConfig(level=logging.CRITICAL)
             else:
                 print("ERROR: --log needs to be in DEBUG, INFO, WARNING, ERROR or CRITICAL ")
-        elif opt == "--pvc":
-            PVC_NAME = arg
 
         elif opt == "-h":
             print_usage()
