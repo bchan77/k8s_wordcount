@@ -68,7 +68,8 @@ def create_pvc_if_not_exist(kube_client, namespace = "default", pvc_name="k8s-wo
                     is_pvc_ready=True
 
 
-
+def delete_pvc(kube_client, namespace='default', pvc_name):
+    print("Hello delete_pvc !!!")
 
 
 def print_usage():
