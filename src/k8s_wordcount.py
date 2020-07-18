@@ -1,7 +1,7 @@
 import logging
 from kubernetes import client, config
 from os import path
-import getopt, sys, yaml
+import getopt, sys, time
 
 def get_namespace():
     #Get a list of namespace
@@ -52,9 +52,22 @@ def create_pvc_if_not_exist(kube_client, namespace = "default", pvc_name="k8s-wo
             )
         )
     else:
-        logging.info("No going to create any PVC")
+        logging.info("Not going to create any PVC")
 
+    is_pvc_ready = False
     #Wait for PVC to be ready
+    while not is_pvc_ready:
+        pvcs = kube_client.list_namespaced_persistent_volume_claim(namespace=namespace,watch=False)
+
+        for i in pvcs.items:
+            time.sleep(1)
+            if (i.metadata.name == pvc_name):
+                logging.debug(pvc_name + "is " + i.status.phase)
+                if(i.status.phase == 'Bound'):
+                    logging.info(pvc_name + "is ready")
+                    is_pvc_ready=True
+
+
 
 
 
