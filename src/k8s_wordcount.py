@@ -28,14 +28,33 @@ def create_pvc_if_not_exist(kube_client, namespace = "default", pvc_name="k8s-wo
 
     #If the pvc doesn't exist, create it
     if(pvc_name not in pvc_list):
-        # Source: https://stackoverflow.com/questions/56673919/kubernetes-python-api-client-execute-full-yaml-file
-        logging.info("Creating PVC - " + pvc_name)
-        with open(path.join(path.dirname(__file__),"../kubernetes/pvc.yaml")) as f:
-            dep = yaml.safe_load(f)
-            k8s_beta = client.ExtensionsV1beta1Api()
-            reps = k8s_beta.create_namespaced_deployment(body=dep, namespace=namespace)
+        logging.info("Creating PVC: " + pvc_name)
+        kube_client.create_namespaced_persistent_volume_claim(
+            namespace=namespace,
+            body = client.V1PersistentVolumeClaim(
+                api_version='v1',
+                kind='PersistentVolumeClaim',
+                metadata=client.V1ObjectMeta(
+                    name= pvc_name,
+                ),
+                spec=client.V1PersistentVolumeClaimSpec(
+                    access_modes=[
+                        'ReadWriteMany'
+                    ],
+                    resources=client.V1ResourceRequirements(
+                        requests={
+                            'storage': '10Gi'
+                        }
+                    ),
+                    storage_class_name='managed-nfs-storage', #Change it to any storageclass you have
+                    volume_mode='Filesystem'
+                )
+            )
+        )
     else:
         logging.info("No going to create any PVC")
+
+    #Wait for PVC to be ready
 
 
 
@@ -47,7 +66,7 @@ def print_usage():
 
 def main():
     LOGGING=logging.INFO # By default, just log info
-    NAMESPACE=""
+    NAMESPACE="default"
     PVC_NAME = "k8s-wordcount-pvc"
 
     try:
