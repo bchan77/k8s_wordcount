@@ -73,6 +73,21 @@ def delete_pvc(kube_client, namespace='default', pvc_name="k8s-wordcount-pvc"):
     kube_client.delete_namespaced_persistent_volume_claim(pvc_name,namespace)
     logging.info("Done Deleting VPC")
 
+def create_dummy_pod(kube_client,namespace='default', pvc_name="k8s-wordcount-pvc"):
+    logging.info("Creating Dummy Pod to copy file")
+    #should create_namespaced_pod
+    kube_client.create_namespaced_pod(
+        namespace=namespace,
+        body = client.V1Pod(
+                api_version="v1",
+                kind = "Pod",
+                metadata=client.V1ObjectMeta(
+                    
+                )
+            )
+    )
+    logging.info("Done with creating dummy pod")
+
 
 def print_usage():
     print(sys.argv[0] +  " -h " \
@@ -124,10 +139,6 @@ def main():
 
     #Deleting VPC
     delete_pvc(kube_client,NAMESPACE,PVC_NAME)
-
-
-    print(pvcs)
-
 
 
 if __name__ == "__main__":
