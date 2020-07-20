@@ -68,8 +68,10 @@ def create_pvc_if_not_exist(kube_client, namespace = "default", pvc_name="k8s-wo
                     is_pvc_ready=True
 
 
-def delete_pvc(kube_client, namespace='default', pvc_name):
-    print("Hello delete_pvc !!!")
+def delete_pvc(kube_client, namespace='default', pvc_name="k8s-wordcount-pvc"):
+    logging.info("Deleting PVC : " + pvc_name)
+    kube_client.delete_namespaced_persistent_volume_claim(pvc_name,namespace)
+    logging.info("Done Deleting VPC")
 
 
 def print_usage():
@@ -119,6 +121,10 @@ def main():
 
     #Creating PVC
     create_pvc_if_not_exist(kube_client,NAMESPACE,PVC_NAME)
+
+    #Deleting VPC
+    delete_pvc(kube_client,NAMESPACE,PVC_NAME)
+
 
     print(pvcs)
 
