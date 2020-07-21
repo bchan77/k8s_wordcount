@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: k8s-wordcount-pod
+spec:
+  containers:
+  - name: k8s-wordcount-pod
+    image: debian
+
+    command:
+      - sleep
+      - "infinity"
+    imagePullPolicy: IfNotPresent
+  restartPolicy: Always
