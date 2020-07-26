@@ -3,6 +3,8 @@ from kubernetes import client, config
 from os import path
 import getopt, sys, time
 
+SLEEP_TIME = 5 # in sec
+
 def get_namespace():
     #Get a list of namespace
     print("get_namespace")
@@ -73,23 +75,68 @@ def delete_pvc(kube_client, namespace='default', pvc_name="k8s-wordcount-pvc"):
     kube_client.delete_namespaced_persistent_volume_claim(pvc_name,namespace)
     logging.info("Done Deleting VPC")
 
-def create_dummy_pod(kube_client,namespace='default', pvc_name="k8s-wordcount-pvc", pod_name="k8s-wordcount-dummy-pod"):
-    logging.info("Creating Dummy Pod to copy file")
-    #should create_namespaced_pod
-    kube_client.create_namespaced_pod(
-        namespace=namespace,
-        body = client.V1Pod(
-                api_version="v1",
-                kind = "Pod",
-                metadata=client.V1ObjectMeta(
-                    name = pod_name
-                ),
-                spec=client.V1PodSpec(
+def manifest_with_sleep(name):
+#Source: https://github.com/kubernetes-client/python/blob/master/kubernetes/e2e_test/test_client.py
+    return {
+        'apiVersion': 'v1',
+        'kind': 'Pod',
+        'metadata': {
+            'name': name
+        },
+        'spec': {
+            'containers':[{
+                'name': name,
+                'image': 'debian',
+                "command": [
+                    "sleep",
+                    "infinity"
+                ],
+                'imagePullPolicy': 'IfNotPresent'
+            }]
+        }
+    }
 
-                )
-            )
-    )
-    logging.info("Done with creating dummy pod")
+
+def create_dummy_pod(kube_client,namespace='default', pvc_name="k8s-wordcount-pvc", pod_name="k8s-wordcount-dummy-pod"):
+    #Source https://github.com/kubernetes-client/python/blob/master/kubernetes/e2e_test/test_client.py
+
+    logging.info("Creating Dummy Pod to copy file")
+    stat_time = ""
+    end_time = ""
+    #should create_namespaced_pod
+    pod_manifest = manifest_with_sleep(pod_name)
+    logging.debug("pod_manifest: " + str(pod_manifest))
+    resp = ""
+
+    try:
+        start_time = time.time()
+        logging.info("Creating dummy pod")
+        resp = kube_client.create_namespaced_pod(body=pod_manifest, namespace=namespace)
+
+        is_pod_ready = False
+
+        while not is_pod_ready:
+            time.sleep(SLEEP_TIME)
+
+            pods = kube_client.list_namespaced_pod(namespace=namespace,watch=False)
+
+            for i in pods.items:
+                if(i.metadata.name == pod_name):
+                    logging.debug(pod_name + " creating status " + i.status.phase)
+
+                    if(i.status.phase == "Running"):
+                        is_pod_ready = True
+
+
+        end_time = time.time()
+        logging.info("Done with creating dummy pod " + str(round(end_time-start_time,2)) + "sec")
+
+    except client.rest.ApiException as err:
+        print("Error :" + str(err))
+        #return -1 as error
+        return -1
+
+    return 0
 
 
 def print_usage():
@@ -142,6 +189,9 @@ def main():
 
     #Deleting VPC
     delete_pvc(kube_client,NAMESPACE,PVC_NAME)
+
+    #Creating create_dummy_pod
+    create_dummy_pod(kube_client,NAMESPACE)
 
 
 if __name__ == "__main__":
