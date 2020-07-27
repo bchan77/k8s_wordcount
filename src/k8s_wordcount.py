@@ -145,7 +145,8 @@ def create_dummy_pod(kube_client,namespace='default', pvc_name="k8s-wordcount-pv
 
 def print_usage():
     print(sys.argv[0] +  " -h " \
-                         "--log <DEBUG|INFO|WARNING|ERROR|CRITICAL>"
+                         "--log <DEBUG|INFO|WARNING|ERROR|CRITICAL>" \
+                         "--cleanup"
           )
 
 
@@ -153,9 +154,10 @@ def main():
     LOGGING=logging.INFO # By default, just log info
     NAMESPACE="default"
     PVC_NAME = "k8s-wordcount-pvc"
+    CLEANUP = False # False by default
 
     try:
-        opts, args = getopt.getopt(sys.argv[1:], "-h", ["log="])
+        opts, args = getopt.getopt(sys.argv[1:], "-h", ["log=","cleanup"])
 
     except getopt.GetoptError as err:
         print(str(err))
@@ -177,6 +179,9 @@ def main():
             else:
                 print("ERROR: --log needs to be in DEBUG, INFO, WARNING, ERROR or CRITICAL ")
 
+        elif opt.upper() == "--CLEANUP":
+            CLEANUP = True
+
         elif opt == "-h":
             print_usage()
 
@@ -197,8 +202,10 @@ def main():
 
     ######Clean up here######
 
-    #Deleting VPC
-    #delete_pvc(kube_client,NAMESPACE,PVC_NAME)
+    if(CLEANUP):
+        #Deleting VPC
+        logging.info("CLEANING UP")
+        delete_pvc(kube_client,NAMESPACE,PVC_NAME)
 
 
 if __name__ == "__main__":
