@@ -3,12 +3,19 @@ kind: Pod
 metadata:
   name: k8s-wordcount-pod
 spec:
+  volumes:
+    - name: workcount-storage
+      persistentVolumeClaim:
+        claimName: k8s-wordcount-pvc
   containers:
   - name: k8s-wordcount-pod
     image: debian
-
     command:
       - sleep
       - "infinity"
     imagePullPolicy: IfNotPresent
+    volumeMounts:
+      - mountPath: "/data"
+        name: workcount-storage
   restartPolicy: Always
+

@@ -84,6 +84,10 @@ def manifest_with_sleep(name):
             'name': name
         },
         'spec': {
+            'volumes':[{
+               'name': 'workcount-storage',
+                'persistentVolumeClaim': {'claimName': 'k8s-wordcount-pvc'}
+            }],
             'containers':[{
                 'name': name,
                 'image': 'debian',
@@ -91,6 +95,7 @@ def manifest_with_sleep(name):
                     "sleep",
                     "infinity"
                 ],
+                'volumeMounts' : [{'mountPath': "/data", 'name': 'workcount-storage'}],
                 'imagePullPolicy': 'IfNotPresent'
             }]
         }
@@ -98,7 +103,6 @@ def manifest_with_sleep(name):
 
 
 def create_dummy_pod(kube_client,namespace='default', pvc_name="k8s-wordcount-pvc", pod_name="k8s-wordcount-dummy-pod"):
-    #Source https://github.com/kubernetes-client/python/blob/master/kubernetes/e2e_test/test_client.py
 
     logging.info("Creating Dummy Pod to copy file")
     stat_time = ""
@@ -187,11 +191,14 @@ def main():
     #Creating PVC
     create_pvc_if_not_exist(kube_client,NAMESPACE,PVC_NAME)
 
-    #Deleting VPC
-    delete_pvc(kube_client,NAMESPACE,PVC_NAME)
-
     #Creating create_dummy_pod
     create_dummy_pod(kube_client,NAMESPACE)
+
+
+    ######Clean up here######
+
+    #Deleting VPC
+    #delete_pvc(kube_client,NAMESPACE,PVC_NAME)
 
 
 if __name__ == "__main__":

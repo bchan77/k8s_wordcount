@@ -10,5 +10,5 @@ spec:
       storage: 10Gi   # Lets ask for 10GB. Change it if we needs it to be smaller
   accessModes:
     - ReadWriteMany
-  storageClassName: slow   #Update if the k8s has no default storage class.
+  storageClassName: managed-nfs-storage
 
